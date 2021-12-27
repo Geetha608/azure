@@ -1,0 +1,95 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+      "parameters": {
+      "serviceBusNamespaceName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Service Bus namespace"
+        }
+      },
+        "location":{
+          "type":"string",
+          "metadata": {
+       "description": "The location in which the resources should be deployed."
+          }
+
+      } ,
+       "Pricing_tier":{
+            "type": "string",
+            "defaultValue":"Basic"
+        },     
+      "serviceBusQueueName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Queue"
+        }
+      }
+      },
+    "functions": [],
+    "resources": [
+      {
+        "type": "Microsoft.ServiceBus/namespaces",
+        "apiVersion": "2021-06-01-preview",
+        "name": "[parameters('serviceBusNamespaceName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+                
+                "Env": "test"
+            },
+        "sku": {
+          "name": "[parameters('Pricing_tier')]",
+          "tier": "[parameters('Pricing_tier')]"
+            },
+            "properties": {
+                "disableLocalAuth": false,
+                "zoneRedundant": false
+            }
+        },
+      
+      {
+            "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+            "apiVersion": "2021-06-01-preview",
+            "name": "[concat(parameters('serviceBusNamespaceName'), '/RootManageSharedAccessKey')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
+            ],
+            "properties": {
+                "rights": [
+                    "Listen",
+                    "Manage",
+                    "Send"
+                ]
+            }
+        },
+         
+      {
+        "type": "Microsoft.ServiceBus/namespaces/queues",
+        "apiVersion": "2021-06-01-preview",
+        "name": "[concat(parameters('serviceBusNamespaceName'), '/', parameters('serviceBusqueueName'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]"
+            ],
+        "properties": {
+                "maxMessageSizeInKilobytes": 256,
+                "lockDuration": "PT30S",
+                "maxSizeInMegabytes": 1024,
+                "requiresDuplicateDetection": false,
+                "requiresSession": false,
+                "defaultMessageTimeToLive": "P14D",
+                "deadLetteringOnMessageExpiration": false,
+                "enableBatchedOperations": true,
+                "duplicateDetectionHistoryTimeWindow": "PT10M",
+                "maxDeliveryCount": 10,
+                "status": "Active",
+                "enablePartitioning": false,
+                "enableExpress": false
+        }
+        
+      }
+     
+    ]
+    
+  }
